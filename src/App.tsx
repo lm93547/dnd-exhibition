@@ -8,14 +8,14 @@ import "/node_modules/react-grid-layout/css/styles.css";
 import "/node_modules/react-resizable/css/styles.css";
 import DraggableComponent from "./components/Draggable";
 
-type Flower = {
+export type Flower = {
   title: string;
   imgSource: string;
 };
 
 function App() {
   const [flowerState, setFlowerState] = useState<Flower[]>(flowers);
-  const [exhibtionState, setExhibitionState] = useState<Flower[] | any[]>([]);
+  const [exhibitionState, setExhibitionState] = useState<Flower[]>([]);
   const [positions, setPositions] = useState({});
 
   const onDragStart = (e: DragEvent<HTMLDivElement>, id: string): void => {
@@ -25,10 +25,9 @@ function App() {
   const onDrop = (e: DragEvent<HTMLDivElement>): void => {
     let id = e.dataTransfer.getData("id");
     const itemDragged = flowerState.find((flower) => flower.title === id);
-    const hasItemAlready = exhibtionState.find(
+    const hasItemAlready = exhibitionState.find(
       (flower) => flower.title === itemDragged?.title
     );
-    console.log("🚀 ~ file: App.tsx:28 ~ onDrop ~ itemDragged", itemDragged);
     if (itemDragged && !hasItemAlready) {
       setExhibitionState((current) => [...current, itemDragged]);
     }
@@ -65,8 +64,8 @@ function App() {
   }, [positions]);
 
   useEffect(() => {
-    localStorage.setItem(`items_in_exhibition`, JSON.stringify(exhibtionState));
-  }, [exhibtionState]);
+    localStorage.setItem(`items_in_exhibition`, JSON.stringify(exhibitionState));
+  }, [exhibitionState]);
 
   return (
     <div
@@ -85,20 +84,23 @@ function App() {
         style={{
           height: "70vh",
           width: "100vw",
-          backgroundColor: "gray",
+          backgroundColor: "grey",
           display: "flex",
         }}
         onDrop={(e) => onDrop(e)}
         onDragOver={(e) => onDragOver(e)}
       >
         <div style={{ display: "flex" }}>
-          {exhibtionState.map(({ title, imgSource }) => {
+          {exhibitionState.map(({ title, imgSource }) => {
             return (
               <DraggableComponent
+                key={title}
                 setPositions={setPositions}
                 positions={positions}
                 imageTitle={title}
                 imageSource={imgSource}
+                exhibitionState={exhibitionState}
+                setExhibitionState={setExhibitionState}
               />
             );
           })}
@@ -121,7 +123,7 @@ function App() {
               >
                 <img
                   src={imgSource}
-                  width="200px"
+                  width="800px"
                   height="200px"
                   style={{
                     maxHeight: "200px",
