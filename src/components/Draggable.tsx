@@ -3,7 +3,6 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import { DraggableData, DraggableEvent } from "react-draggable";
 import { Flower, Positions } from "../globals";
-import useWindowSize from "../hooks/useWindowSize";
 import DraggableButtons from "./DraggableButtons";
 
 type Props = {
@@ -27,7 +26,6 @@ const DraggableComponent = ({
   const [y, setY] = useState(0);
   const [toolbarOpacity, setToolbarOpacity] = useState<string>("0");
   const nodeRef = useRef(null);
-  const windowSize = useWindowSize();
 
   const handleDelete = (imageTitle: string): void => {
     const newExhibitionState = exhibitionState.filter(
@@ -50,23 +48,6 @@ const DraggableComponent = ({
     savedPositions[itemId]["y"] = dragElement.y;
     setPositions(savedPositions);
   };
-
-  useEffect(() => {
-    if(windowSize.width <= 900){
-        if (positions && positions[imageTitle]) {
-            let savedPositions = { ...positions };
-            savedPositions[imageTitle] = {x: windowSize.width / 4, y: windowSize.height / 4};
-            setPositions(savedPositions);
-        }
-    }
-    if(windowSize.width <= 500){
-        if (positions && positions[imageTitle]) {
-            let savedPositions = { ...positions };
-            savedPositions[imageTitle] = {x: windowSize.width / 6, y: windowSize.height / 4};
-            setPositions(savedPositions);
-        }
-    }
-  }, [windowSize]);
 
   return (
     <Draggable
