@@ -79,7 +79,7 @@ function App() {
         scale={1}
       >
         <Flex w="100vw" direction="column" h="100%">
-          <Flex w="100vw" h="100%">
+          <Flex w="100vw" h="100%" overflowX="scroll" >
             {exhibitionState.map(({ title, imgSource }) => {
               return (
                 <DraggableComponent
