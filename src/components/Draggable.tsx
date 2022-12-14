@@ -1,13 +1,16 @@
-import { DragHandleIcon } from "@chakra-ui/icons";
+import { DragHandleIcon, DeleteIcon } from "@chakra-ui/icons";
 import React, { Dispatch, SetStateAction, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import {DraggableData, DraggableEvent} from "react-draggable"
+import { Flower } from "../App";
 
 type Props = {
   imageSource: string;
   imageTitle: string;
   setPositions: Dispatch<SetStateAction<{}>>;
   positions: any;
+  exhibitionState: Flower[];
+  setExhibitionState: Dispatch<SetStateAction<Flower[]>>
 };
 
 const DraggableComponent = ({
@@ -15,10 +18,17 @@ const DraggableComponent = ({
   imageTitle,
   setPositions,
   positions,
+  exhibitionState,
+  setExhibitionState,
 }: Props) => {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const nodeRef = useRef(null);
+
+  const handleDelete = (imageTitle: string):void => {
+    const newExhibitionState = exhibitionState.filter((flowerItem) => flowerItem.title !== imageTitle)
+    setExhibitionState(newExhibitionState)
+  }
 
   const handleStop = (event: DraggableEvent, dragElement: DraggableData, id: string) => {
     setX(dragElement.x);
@@ -49,9 +59,15 @@ const DraggableComponent = ({
         ref={nodeRef}
         id={imageTitle}
       >
-        <div className="handle">
-          <DragHandleIcon />
+        <div style={{display: "flex"}} >
+          <div className="handle">
+            <DragHandleIcon />
+          </div>
+          <div onClick={()=> handleDelete(imageTitle)}>
+            <DeleteIcon />
+          </div>
         </div>
+        
         <img
           src={imageSource}
           width="200px"
