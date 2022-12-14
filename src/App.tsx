@@ -1,22 +1,15 @@
-import { Flex, Image } from "@chakra-ui/react";
-import { useCallback, useEffect, useState, DragEvent } from "react";
-import { DragHandleIcon } from "@chakra-ui/icons";
-import GridLayout from "react-grid-layout";
+import { useEffect, useState, DragEvent } from "react";
 import { flowers } from "./data/flowers";
-import Draggable from "react-draggable";
-import "/node_modules/react-grid-layout/css/styles.css";
-import "/node_modules/react-resizable/css/styles.css";
 import DraggableComponent from "./components/Draggable";
-
-export type Flower = {
-  title: string;
-  imgSource: string;
-};
+import { DeleteIcon } from "@chakra-ui/icons";
+import { Box, Flex, Image, Tooltip } from "@chakra-ui/react";
+import { Flower, Positions } from "./globals";
+import useWindowSize from "./hooks/useWindowSize";
 
 function App() {
-  const [flowerState, setFlowerState] = useState<Flower[]>(flowers);
+  const [flowerState] = useState<Flower[]>(flowers);
   const [exhibitionState, setExhibitionState] = useState<Flower[]>([]);
-  const [positions, setPositions] = useState({});
+  const [positions, setPositions] = useState<Positions>({});
 
   const onDragStart = (e: DragEvent<HTMLDivElement>, id: string): void => {
     e.dataTransfer.setData("id", id);
@@ -38,12 +31,12 @@ function App() {
   };
 
   const clearCanvas = (): void => {
-    setExhibitionState([])
+    setExhibitionState([]);
     localStorage.removeItem("positions_div");
-  }
+  };
 
   useEffect(() => {
-    const existingDivPositions: string | null = JSON.parse(
+    const existingDivPositions: Positions = JSON.parse(
       localStorage.getItem("positions_div") as string
     );
 
@@ -51,92 +44,91 @@ function App() {
       localStorage.getItem("items_in_exhibition") as string
     );
 
-    if(existingDivPositions){
-        setPositions(existingDivPositions);
+    if (existingDivPositions) {
+      setPositions(existingDivPositions);
     }
-    if(existingItemPositions){
-        setExhibitionState(existingItemPositions);
+    if (existingItemPositions) {
+      setExhibitionState(existingItemPositions);
     }
   }, []);
+
 
   useEffect(() => {
     localStorage.setItem(`positions_div`, JSON.stringify(positions));
   }, [positions]);
 
   useEffect(() => {
-    localStorage.setItem(`items_in_exhibition`, JSON.stringify(exhibitionState));
+    localStorage.setItem(
+      `items_in_exhibition`,
+      JSON.stringify(exhibitionState)
+    );
   }, [exhibitionState]);
 
+
+
   return (
-    <div
-      style={{
-        height: "100vh",
-        width: "100vw",
-        backgroundColor: "gray",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div onClick={clearCanvas} >
-        Clear Items
-      </div>
-      <div
-        style={{
-          height: "70vh",
-          width: "100vw",
-          backgroundColor: "grey",
-          display: "flex",
-        }}
+    <Flex direction="column" justifyContent="center" alignItems="center">
+      <Flex
+        h="70vh"
+        w="100vw"
+        bgColor="grey"
+        display="flex"
+        justifyContent="center"
         onDrop={(e) => onDrop(e)}
         onDragOver={(e) => onDragOver(e)}
+        scale={1}
       >
-        <div style={{ display: "flex" }}>
-          {exhibitionState.map(({ title, imgSource }) => {
-            return (
-              <DraggableComponent
-                key={title}
-                setPositions={setPositions}
-                positions={positions}
-                imageTitle={title}
-                imageSource={imgSource}
-                exhibitionState={exhibitionState}
-                setExhibitionState={setExhibitionState}
-              />
-            );
-          })}
-        </div>
-      </div>
-      <div
-        style={{
-          height: "30vh",
-          width: "100vw",
-          backgroundColor: "lightgray",
-        }}
-      >
-        <div style={{ display: "flex" }}>
+        <Flex w="100vw" direction="column" h="100%">
+          <Flex w="100vw" h="100%">
+            {exhibitionState.map(({ title, imgSource }) => {
+              return (
+                <DraggableComponent
+                  key={title}
+                  setPositions={setPositions}
+                  positions={positions}
+                  imageTitle={title}
+                  imageSource={imgSource}
+                  exhibitionState={exhibitionState}
+                  setExhibitionState={setExhibitionState}
+                />
+              );
+            })}
+          </Flex>
+          <Tooltip w="fit-content" label="Clear All Items">
+            <Flex
+              _hover={{ bg: "darkgray", cursor: "pointer" }}
+              p={6}
+              bg="red.400"
+              w="fit-content"
+              onClick={clearCanvas}
+            >
+              <DeleteIcon color="white" />
+            </Flex>
+          </Tooltip>
+        </Flex>
+      </Flex>
+      <Flex direction="column" justifyContent="center" height="30vh" width="100vw" backgroundColor="gray.600">
+        <Flex>
           {flowerState.map(({ title, imgSource }) => {
             return (
-              <div
+              <Flex
                 onDragStart={(e) => onDragStart(e, title)}
                 key={title}
                 draggable={true}
               >
-                <img
+                <Image
                   src={imgSource}
-                  width="800px"
                   height="200px"
-                  style={{
-                    maxHeight: "200px",
-                    objectFit: "cover",
-                    objectPosition: "center",
-                  }}
+                  maxHeight={"200px"}
+                  objectFit={"contain"}
+                  objectPosition={"center"}
                 />
-              </div>
+              </Flex>
             );
           })}
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
 
