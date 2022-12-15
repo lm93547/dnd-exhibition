@@ -1,16 +1,17 @@
-import { DragHandleIcon, DeleteIcon } from "@chakra-ui/icons";
-import React, { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Flex, Image } from "@chakra-ui/react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
-import {DraggableData, DraggableEvent} from "react-draggable"
-import { Flower } from "../App";
+import { DraggableData, DraggableEvent } from "react-draggable";
+import { Flower, Positions } from "../globals";
+import DraggableButtons from "./DraggableButtons";
 
 type Props = {
   imageSource: string;
   imageTitle: string;
   setPositions: Dispatch<SetStateAction<{}>>;
-  positions: any;
+  positions: Positions;
   exhibitionState: Flower[];
-  setExhibitionState: Dispatch<SetStateAction<Flower[]>>
+  setExhibitionState: Dispatch<SetStateAction<Flower[]>>;
 };
 
 const DraggableComponent = ({
@@ -23,19 +24,26 @@ const DraggableComponent = ({
 }: Props) => {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
+  const [toolbarOpacity, setToolbarOpacity] = useState<string>("0");
   const nodeRef = useRef(null);
 
-  const handleDelete = (imageTitle: string):void => {
-    const newExhibitionState = exhibitionState.filter((flowerItem) => flowerItem.title !== imageTitle)
-    setExhibitionState(newExhibitionState)
-  }
+  const handleDelete = (imageTitle: string): void => {
+    const newExhibitionState = exhibitionState.filter(
+      (flowerItem) => flowerItem.title !== imageTitle
+    );
+    setExhibitionState(newExhibitionState);
+  };
 
-  const handleStop = (event: DraggableEvent, dragElement: DraggableData, id: string) => {
+  const handleStop = (
+    event: DraggableEvent,
+    dragElement: DraggableData,
+    id: string
+  ) => {
     setX(dragElement.x);
     setY(dragElement.y);
     let savedPositions = { ...positions };
     const itemId = id;
-    savedPositions[itemId] = {};
+    savedPositions[itemId] = {x: 0, y: 0};
     savedPositions[itemId]["x"] = dragElement.x;
     savedPositions[itemId]["y"] = dragElement.y;
     setPositions(savedPositions);
@@ -43,7 +51,10 @@ const DraggableComponent = ({
 
   return (
     <Draggable
-      position={{ x: positions[imageTitle] ? positions[imageTitle].x : x, y: positions[imageTitle] ? positions[imageTitle].y : y }}
+      position={{
+        x: positions[imageTitle] ? positions[imageTitle].x : x,
+        y: positions[imageTitle] ? positions[imageTitle].y : y,
+      }}
       axis="both"
       handle=".handle"
       grid={[5, 5]}
@@ -51,34 +62,41 @@ const DraggableComponent = ({
       onStop={(e, dragElement) => handleStop(e, dragElement, imageTitle)}
       key={imageTitle}
       ref={nodeRef}
-      defaultPosition={{ x: positions[imageTitle] ? positions[imageTitle].x : 0, y: positions[imageTitle] ? positions[imageTitle].y : 0 }}
+      defaultPosition={{
+        x: positions[imageTitle] ? positions[imageTitle].x : 0,
+        y: positions[imageTitle] ? positions[imageTitle].y : 0,
+      }}
+      bounds="parent"
     >
-      <div
-        style={{ border: "solid 1px black", height: "fit-content" }}
+      <Flex
+        border="none"
+        _hover={{
+          border: "solid 1px black",
+          transition: "border 1s",
+          cursor: "move",
+        }}
+        height="fit-content"
         key={imageTitle}
         ref={nodeRef}
         id={imageTitle}
+        className="handle"
+        onMouseOver={() => setToolbarOpacity("1")}
+        onMouseOut={() => setToolbarOpacity("0")}
       >
-        <div style={{display: "flex"}} >
-          <div className="handle">
-            <DragHandleIcon />
-          </div>
-          <div onClick={()=> handleDelete(imageTitle)}>
-            <DeleteIcon />
-          </div>
-        </div>
-        
-        <img
-          src={imageSource}
-          width="200px"
-          height="200px"
-          style={{
-            maxHeight: "200px",
-            objectFit: "cover",
-            objectPosition: "center",
-          }}
+        <DraggableButtons
+          toolbarOpacity={toolbarOpacity}
+          handleDelete={handleDelete}
+          imageTitle={imageTitle}
         />
-      </div>
+        <Image
+          src={imageSource}
+          height="200px"
+          maxHeight={"200px"}
+          objectFit={"contain"}
+          objectPosition={"center"}
+          pointerEvents="none"
+        />
+      </Flex>
     </Draggable>
   );
 };
