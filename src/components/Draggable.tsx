@@ -1,9 +1,13 @@
 import { Flex, Image } from "@chakra-ui/react";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, RefObject, SetStateAction, SyntheticEvent, useEffect, useRef, useState,  } from "react";
 import Draggable from "react-draggable";
 import { DraggableData, DraggableEvent } from "react-draggable";
 import { Flower, Positions } from "../globals";
 import DraggableButtons from "./DraggableButtons";
+import { ResizableBox, ResizeCallbackData, ResizeHandle } from "react-resizable";
+import { ChevronRightIcon } from "@chakra-ui/icons";
+import "../../node_modules/react-resizable/css/styles.css";
+import "../style.css"
 
 type Props = {
   imageSource: string;
@@ -25,6 +29,8 @@ const DraggableComponent = ({
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [toolbarOpacity, setToolbarOpacity] = useState<string>("0");
+  const [imageSize, setImageSize] = useState({ width: 200, height: 200 });
+
   const nodeRef = useRef(null);
 
   const handleDelete = (imageTitle: string): void => {
@@ -43,10 +49,18 @@ const DraggableComponent = ({
     setY(dragElement.y);
     let savedPositions = { ...positions };
     const itemId = id;
-    savedPositions[itemId] = {x: 0, y: 0};
+    savedPositions[itemId] = { x: 0, y: 0 };
     savedPositions[itemId]["x"] = dragElement.x;
     savedPositions[itemId]["y"] = dragElement.y;
     setPositions(savedPositions);
+  };
+
+  const onResize = (event: SyntheticEvent<Element, Event>, { size }: ResizeCallbackData): void => {
+    setImageSize({ width: size.width, height: size.height });
+  };
+
+  const renderHandles = (resizeHandle: ResizeHandle, ref: RefObject<SVGSVGElement>): JSX.Element => {
+    return <ChevronRightIcon className={`custom-handle custom-handle-${resizeHandle}`} ref={ref} />;
   };
 
   return (
@@ -68,35 +82,48 @@ const DraggableComponent = ({
       }}
       bounds="parent"
     >
-      <Flex
-        border="none"
-        _hover={{
-          border: "solid 1px black",
-          transition: "border 1s",
-          cursor: "move",
-        }}
-        height="fit-content"
-        key={imageTitle}
-        ref={nodeRef}
-        id={imageTitle}
-        className="handle"
-        onMouseOver={() => setToolbarOpacity("1")}
-        onMouseOut={() => setToolbarOpacity("0")}
+      <ResizableBox
+        onResize={onResize}
+        handle={(handleLocations, ref) => renderHandles(handleLocations, ref)}
+        width={imageSize.width}
+        height={imageSize.height}
+        minConstraints={[100, 100]}
+        maxConstraints={[300, 300]}
+        resizeHandles={['sw', 'se', 'nw', 'ne']}
+        className={toolbarOpacity === "1" ? "resize" : "resize-hidden"}
       >
-        <DraggableButtons
-          toolbarOpacity={toolbarOpacity}
-          handleDelete={handleDelete}
-          imageTitle={imageTitle}
-        />
-        <Image
-          src={imageSource}
-          height="200px"
-          maxHeight={"200px"}
-          objectFit={"contain"}
-          objectPosition={"center"}
-          pointerEvents="none"
-        />
-      </Flex>
+        <span>
+          <Flex
+            border="none"
+            _hover={{
+              border: "solid 1px black",
+              transition: "border 1s",
+              cursor: "move",
+            }}
+            height="fit-content"
+            key={imageTitle}
+            ref={nodeRef}
+            id={imageTitle}
+            className="handle"
+            onMouseOver={() => setToolbarOpacity("1")}
+            onMouseOut={() => setToolbarOpacity("0")}
+          >
+            <DraggableButtons
+              toolbarOpacity={toolbarOpacity}
+              handleDelete={handleDelete}
+              imageTitle={imageTitle}
+            />
+            <Image
+              src={imageSource}
+              height={imageSize.height}
+              width={imageSize.width}
+              objectFit={"contain"}
+              objectPosition={"center"}
+              pointerEvents="none"
+            />
+          </Flex>
+        </span>
+      </ResizableBox>
     </Draggable>
   );
 };
