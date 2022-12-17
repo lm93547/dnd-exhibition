@@ -4,7 +4,7 @@ import { Flower, Positions, UseSetItemPositionsArgs } from "../globals";
 const useSetItemPositions = ({
   positions: { state: positionState, setPositions },
   exhibition: { state: eState, setExhibitionState },
-}: UseSetItemPositionsArgs) => {
+}: UseSetItemPositionsArgs): void => {
   useEffect(() => {
     const existingDivPositions: Positions = JSON.parse(
       localStorage.getItem("positions_div") as string
