@@ -1,28 +1,29 @@
-import { useEffect, useState, DragEvent } from "react";
+import { useState, DragEvent } from "react";
 import { flowers } from "./data/flowers";
 import DraggableComponent from "./components/Draggable";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { Box, Flex, Image, Tooltip } from "@chakra-ui/react";
+import { Flex, Image, Tooltip } from "@chakra-ui/react";
 import { Flower, Positions } from "./globals";
-import useWindowSize from "./hooks/useWindowSize";
+import useSetItemPositions from "./hooks/useSetItemPositions";
 
 function App() {
   const [flowerState] = useState<Flower[]>(flowers);
   const [exhibitionState, setExhibitionState] = useState<Flower[]>([]);
   const [positions, setPositions] = useState<Positions>({});
 
-  const onDragStart = (e: DragEvent<HTMLDivElement>, id: string): void => {
-    e.dataTransfer.setData("id", id);
+  const onDragStart = (
+    e: DragEvent<HTMLDivElement>,
+    flowerItem: Flower
+  ): void => {
+    e.dataTransfer.setData("flower", JSON.stringify(flowerItem));
   };
 
   const onDrop = (e: DragEvent<HTMLDivElement>): void => {
-    let id = e.dataTransfer.getData("id");
-    const itemDragged = flowerState.find((flower) => flower.title === id);
-    const hasItemAlready = exhibitionState.find(
-      (flower) => flower.title === itemDragged?.title
-    );
-    if (itemDragged && !hasItemAlready) {
-      setExhibitionState((current) => [...current, itemDragged]);
+    const flowerObjectStringified = e.dataTransfer.getData("flower");
+    const flowerObject = JSON.parse(flowerObjectStringified);
+
+    if (flowerObject) {
+      setExhibitionState((current) => [...current, flowerObject]);
     }
   };
 
@@ -35,36 +36,10 @@ function App() {
     localStorage.removeItem("positions_div");
   };
 
-  useEffect(() => {
-    const existingDivPositions: Positions = JSON.parse(
-      localStorage.getItem("positions_div") as string
-    );
-
-    const existingItemPositions: Flower[] = JSON.parse(
-      localStorage.getItem("items_in_exhibition") as string
-    );
-
-    if (existingDivPositions) {
-      setPositions(existingDivPositions);
-    }
-    if (existingItemPositions) {
-      setExhibitionState(existingItemPositions);
-    }
-  }, []);
-
-
-  useEffect(() => {
-    localStorage.setItem(`positions_div`, JSON.stringify(positions));
-  }, [positions]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      `items_in_exhibition`,
-      JSON.stringify(exhibitionState)
-    );
-  }, [exhibitionState]);
-
-
+  useSetItemPositions({
+    positions: { state: positions, setPositions },
+    exhibition: { state: exhibitionState, setExhibitionState },
+  });
 
   return (
     <Flex direction="column" justifyContent="center" alignItems="center">
@@ -79,7 +54,7 @@ function App() {
         scale={1}
       >
         <Flex w="100vw" direction="column" h="100%">
-          <Flex w="100vw" h="100%" overflowX="scroll" >
+          <Flex w="100vw" h="100%" overflowX="scroll">
             {exhibitionState.map(({ title, imgSource }) => {
               return (
                 <DraggableComponent
@@ -107,17 +82,27 @@ function App() {
           </Tooltip>
         </Flex>
       </Flex>
-      <Flex direction="column" justifyContent="center" height="30vh" width="100vw" backgroundColor="gray.600">
+      <Flex
+        direction="column"
+        justifyContent="center"
+        height="30vh"
+        width="100vw"
+        backgroundColor="gray.600"
+      >
         <Flex>
-          {flowerState.map(({ title, imgSource }) => {
+          {flowerState.map((flower) => {
+            const flowerCopy = flower;
+            const uniqueId = `${flower.title}-${Math.random().toFixed(2)}`;
+            flowerCopy.title = uniqueId;
+
             return (
               <Flex
-                onDragStart={(e) => onDragStart(e, title)}
-                key={title}
+                onDragStart={(e) => onDragStart(e, flowerCopy)}
+                key={flower.title}
                 draggable={true}
               >
                 <Image
-                  src={imgSource}
+                  src={flower.imgSource}
                   height="200px"
                   maxHeight={"200px"}
                   objectFit={"contain"}
