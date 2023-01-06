@@ -1,4 +1,4 @@
-import { useState, DragEvent } from "react";
+import { useState, DragEvent, useEffect, useRef } from "react";
 import { flowers } from "./data/flowers";
 import DraggableComponent from "./components/Draggable";
 import { Flower, Positions } from "./globals";
@@ -6,11 +6,14 @@ import useSetItemPositions from "./hooks/useSetItemPositions";
 import { Flex, Image } from "@chakra-ui/react";
 import { toJpeg } from "html-to-image";
 import ExhibitionButtons from "./components/ExhibitionButtons";
+import useHandleClickOutside from "./hooks/useHandleClickOutside";
 
 function App() {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [flowerState] = useState<Flower[]>(flowers);
   const [exhibitionState, setExhibitionState] = useState<Flower[]>([]);
   const [positions, setPositions] = useState<Positions>({});
+  const [selected, setSelected] = useState<string>("");
 
   const onDragStart = (
     e: DragEvent<HTMLDivElement>,
@@ -35,6 +38,7 @@ function App() {
   const clearCanvas = (): void => {
     setExhibitionState([]);
     localStorage.removeItem("positions_div");
+    setSelected("")
   };
 
   useSetItemPositions({
@@ -53,6 +57,16 @@ function App() {
     );
   };
 
+  const clearSelected = () => {
+    const savedPositions = {...positions}
+    delete savedPositions[selected]
+    const clearedExhibitionState = exhibitionState.filter((e)=>e.title !== selected);
+    setPositions(savedPositions);
+    setExhibitionState(clearedExhibitionState);
+  }
+
+  useHandleClickOutside(ref, setSelected);
+  
   return (
     <Flex direction="column" justifyContent="center" alignItems="center">
       <Flex
@@ -66,22 +80,19 @@ function App() {
         scale={1}
       >
         <Flex w="100vw" direction="column" h="100%">
-          <Flex id="exhibitionPanel" w="100vw" h="100%" overflowX="scroll">
+          <Flex ref={ref} id="exhibitionPanel" w="100vw" h="100%" overflowX="scroll">
             {exhibitionState.map(({ title, imgSource }) => {
               return (
                 <DraggableComponent
                   key={title}
-                  setPositions={setPositions}
-                  positions={positions}
-                  imageTitle={title}
-                  imageSource={imgSource}
-                  exhibitionState={exhibitionState}
-                  setExhibitionState={setExhibitionState}
+                  image={{title: title, url: imgSource}}
+                  position={{get: positions, set: setPositions}}
+                  selected={{get: selected, set: setSelected}}
                 />
               );
             })}
           </Flex>
-          <ExhibitionButtons clearCanvas={clearCanvas} downloadArrangement={downloadArrangement} />
+          <ExhibitionButtons clearSelected={clearSelected} clearCanvas={clearCanvas} downloadArrangement={downloadArrangement} />
         </Flex>
       </Flex>
       <Flex
